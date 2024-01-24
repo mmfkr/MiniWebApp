@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Information</title>
+    <script>
+        // Function to load all universities on page load
+        function loadUniversities() {
+            fetch('/university')
+                .then(response => response.json())
+                .then(data => displayUniversities(data.data))
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Function to display universities
+        function displayUniversities(universities) {
+            const displayDiv = document.getElementById('universityDisplay');
+            displayDiv.innerHTML = '';
+            universities.forEach(university => {
+                const universityDiv = document.createElement('div');
+                universityDiv.innerHTML = `
+                    <p>${university.name} (Department: ${university.department}, Ranking: ${university.ranking}) 
+                    <button onclick="updateUniversity(${university.id})">Update</button>
+                    <button onclick="deleteUniversity(${university.id})">Delete</button></p>
+                `;
+                displayDiv.appendChild(universityDiv);
+            });
+        }
+
+        // Function to update a university (placeholder function)
+        function updateUniversity(id) {
+            fetch('/university/' + id)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('updateId').value = data.id;
+                    document.getElementById('updateName').value = data.name;
+                    document.getElementById('updateDepartment').value = data.department;
+                    document.getElementById('updateLocation').value = data.location; // Add this line
+                    document.getElementById('updateRanking').value = data.ranking;
+                    document.getElementById('updateForm').style.display = 'block';
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+
+        // New function to handle form submission
+        function submitUpdate() {
+            const id = document.getElementById('updateId').value;
+            const name = document.getElementById('updateName').value;
+            const department = document.getElementById('updateDepartment').value;
+            const location = document.getElementById('updateLocation').value; // Get location value
+            const ranking = document.getElementById('updateRanking').value;
+
+            const data = { name, department, location, ranking }; // Include location in the data object
+
+            fetch('/university/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.message);
+                    document.getElementById('updateForm').style.display = 'none';
+                    loadUniversities(); // Reload universities
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+
+
+        // Function to delete a university
+        function deleteUniversity(id) {
+            fetch('/university/' + id, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.message);
+                    loadUniversities(); // Reload universities
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Function to search by ID or department
+        function searchUniversities() {
+            const searchType = document.getElementById('searchType').value;
+            const searchValue = document.getElementById('searchValue').value;
+            let url = '/university/';
+
+            if (searchType === 'id') {
+                url += searchValue;
+            } else if (searchType === 'department') {
+                url += 'department/' + searchValue;
+            } else if (searchType === 'top') {
+                url += 'top/' + searchValue;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        displayUniversities(data);
+                    } else {
+                        displayUniversities([data]);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function addUniversity() {
+    const name = document.getElementById('newName').value;
+    const department = document.getElementById('newDepartment').value;
+    const location = document.getElementById('newLocation').value;
+    const ranking = document.getElementById('newRanking').value;
+
+    const data = { name, department, location, ranking };
+
+    fetch('/university', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+        loadUniversities(); // Reload the list of universities
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+}
+
+
+
+        // Load universities when the page loads
+        window.onload = loadUniversities;
+        
+    </script>
+</head>
+
+<body>
+    <h1>University Information</h1>
+
+    <div>
+        <select id="searchType">
+            <option value="id">By ID</option>
+            <option value="department">By Department</option>
+            <option value="top">Top Universities</option>
+        </select>
+        <input type="text" id="searchValue" placeholder="Enter search value">
+        <button onclick="searchUniversities()">Search</button>
+        <button onclick="loadUniversities()">Load All Universities</button>
+    </div>
+
+    <div id="universityDisplay"></div>
+</body>
+<!-- Add this inside the body, probably after the search div -->
+<div id="updateForm" style="display:none;">
+    <h2>Update University</h2>
+    <input type="hidden" id="updateId">
+    Name: <input type="text" id="updateName"><br>
+    Department: <input type="text" id="updateDepartment"><br>
+    Location: <input type="text" id="updateLocation"><br> <!-- Added location field -->
+    Ranking: <input type="number" id="updateRanking"><br>
+    <button onclick="submitUpdate()">Submit Update</button>
+</div>
+
+<div>
+    <h2>Add New University</h2>
+    <input type="text" id="newName" placeholder="Name">
+    <input type="text" id="newDepartment" placeholder="Department">
+    <input type="text" id="newLocation" placeholder="Location">
+    <input type="number" id="newRanking" placeholder="Ranking">
+    <button onclick="addUniversity()">Add University</button>
+</div>
+
+</html>
