@@ -8,7 +8,7 @@ const path = require('path');
 const clientPath = path.join(__dirname, 'Client');
 app.use(express.static(clientPath));
 app.use(express.json()); 
-
+const multerMiddleware = multer();
 
 /**
  * @api {post} /university Create a new University
@@ -23,7 +23,7 @@ app.use(express.json());
  *
  * @apiSuccess {String} message Success message.
  */
-app.post('/university', (req, res) => {
+app.post('/university', multerMiddleware.none(), (req, res) => {
     const { name, department, location, ranking } = req.body;
     db.run('INSERT INTO university (name, department, location, ranking) VALUES (?, ?, ?, ?)', 
            [name, department, location, ranking], 
